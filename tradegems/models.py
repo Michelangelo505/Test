@@ -11,6 +11,13 @@ class Customer(models.Model):
 
     @staticmethod
     def ParserDealsCSV(file_path):
+        """
+        Данный метод парсит csv файл.
+
+        :param file_path: путь к загруженному csv файлу
+        :return: Если успешно, то вернет dict со следующей структурой:{'username':[spent_money,[gem1,gem2,...,gemN]]},
+            если произошла ошибка в обработке файла, то вернет None
+        """
         dict_csv = {}
         try:
             with open(file_path,'r') as ObjFile:
