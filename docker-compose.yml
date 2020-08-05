@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    image: michelangelo505/django_test
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    container_name: test
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env.dev
