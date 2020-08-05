@@ -1,9 +1,7 @@
 from django.shortcuts import render
 from django.conf import settings
-from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 
 from .models import *
@@ -12,24 +10,41 @@ from .serializers import *
 
 
 class CustomerView(APIView):
-    parser_classes = (MultiPartParser, FormParser)
+    #parser_classes = (MultiPartParser, FormParser)
 
     def get(self,request):
+        """
+        Метод Get.
+
+        :param request:
+        :return: В ответе содержится поле “response” со списком из 5 клиентов, потративших наибольшую сумму за весь период.
+        """
         cus = Customer.objects.order_by('-spent_money')[:5]
         CustSerializer = CustomersSerializer(cus,many=True)
+
         return Response({'Response':CustSerializer.data})
 
     def post(self,request):
+        """
+        Метод Post. Получает файл csv,c историями сделок. Обработанные данные заносит в db.
+
+        :param request:
+        :return: Возращает Status: Ok, если файл был получен и обработан успешно, иначе 'Status':'Error','Desc':<описание ошибки>'
+        """
         file_serializer = TradeGemsSerializer(data=request.data)
 
         if file_serializer.is_valid():
             file_serializer.save()
 
+            # Вызываем парсер
             CustDict = Customer.ParserDealsCSV(settings.BASE_DIR + file_serializer['deals'].value)
 
+
             if CustDict:
+                # Удлаяем старые данные
                 Customer.objects.all().delete()
 
+                # Сохраняем новые
                 for k,v in CustDict.items():
                     cust = Customer()
                     cust.username = k
