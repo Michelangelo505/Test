@@ -20,9 +20,27 @@ class CustomerView(APIView):
         :return: В ответе содержится поле “response” со списком из 5 клиентов, потративших наибольшую сумму за весь период.
         """
         cus = Customer.objects.order_by('-spent_money')[:5]
-        CustSerializer = CustomersSerializer(cus,many=True)
+        CustSerializer = CustomersSerializer(cus, many=True)
 
-        return Response({'Response':CustSerializer.data})
+        list_cust = []
+
+        for cus in CustSerializer.data:
+            dic_cust = {}
+            list_gem_cust = []
+            for cusN in CustSerializer.data:
+                if cus['username'] == cusN['username']:
+                    continue
+                for gem_cus in cus['gem']:
+                    if gem_cus in cusN['gem'] and not gem_cus in list_gem_cust:
+                        list_gem_cust.append(gem_cus)
+            dic_cust['username'] = cus['username']
+            dic_cust['spent_money'] = cus['spent_money']
+            dic_cust['gem'] = list_gem_cust
+            list_cust.append(dic_cust)
+
+        CustResult = ResponseSerializer(list_cust,many=True)
+
+        return Response({'Response':CustResult.data})
 
     def post(self,request):
         """
